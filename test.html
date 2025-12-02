@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>炫丽情绪安慰器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        @keyframes colorChange {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 5s infinite ease-in-out;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: colorChange 15s ease infinite;
+        }
+        
+        .breathing-circle {
+            animation: pulse 4s infinite ease-in-out;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden relative">
+    <!-- 背景粒子 -->
+    <div id="particles-container" class="absolute inset-0 overflow-hidden"></div>
+    
+    <div class="glass-effect rounded-3xl shadow-2xl p-8 max-w-md w-full relative z-10">
+        <h1 class="text-4xl font-bold text-center text-white mb-6">情绪安慰器</h1>
+        
+        <div class="flex justify-center mb-8">
+            <div class="breathing-circle w-40 h-40 rounded-full bg-white/30 flex items-center justify-center">
+                <div id="face" class="text-6xl">😊</div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <button id="happy-btn" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-laugh-beam mr-2"></i> 开心
+            </button>
+            <button id="calm-btn" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-spa mr-2"></i> 平静
+            </button>
+            <button id="sad-btn" class="bg-purple-400 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-sad-tear mr-2"></i> 悲伤
+            </button>
+            <button id="angry-btn" class="bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-angry mr-2"></i> 愤怒
+            </button>
+        </div>
+        
+        <div class="flex justify-between mb-4">
+            <button id="sound-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-music mr-2"></i> 声音
+            </button>
+            <button id="color-btn" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-palette mr-2"></i> 换色
+            </button>
+            <button id="reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full transition-all flex items-center justify-center">
+                <i class="fas fa-redo mr-2"></i> 重置
+            </button>
+        </div>
+        
+        <div class="mt-6 text-center text-white/80">
+            <p id="quote" class="italic">"每一个情绪都是暂时的，就像天空中的云彩。"</p>
+        </div>
+    </div>
+    
+    <audio id="happy-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-happy-crowd-cheer-1743.mp3"></audio>
+    <audio id="calm-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-nature-ambience-16.mp3"></audio>
+    <audio id="sad-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-rain-loop-1243.mp3"></audio>
+    <audio id="angry-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-ocean-waves-loop-1244.mp3"></audio>
+    
+    <script>
+        // 情绪表情和语录
+        const emotions = {
+            happy: {
+                emoji: "😊",
+                quotes: [
+                    "快乐是一种选择，你今天选择了快乐吗？",
+                    "微笑是免费的，却能带来无限的价值。",
+                    "快乐不在于拥有多少，而在于珍惜多少。"
+                ],
+                color: "bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500"
+            },
+            calm: {
+                emoji: "🧘",
+                quotes: [
+                    "平静的心境是智慧的源泉。",
+                    "深呼吸，让烦恼随风而去。",
+                    "静心如水，方能看清自己的倒影。"
+                ],
+                color: "bg-gradient-to-r from-blue-400 via-teal-500 to-green-500"
+            },
+            sad: {
+                emoji: "😢",
+                quotes: [
+                    "悲伤是成长的催化剂。",
+                    "眼泪洗净心灵，让阳光重新照进来。",
+                    "悲伤过后，你会发现自己比想象中更坚强。"
+                ],
+                color: "bg-gradient-to-r from-purple-400 via-blue-500 to-indigo-500"
+            },
+            angry: {
+                emoji: "😠",
+                quotes: [
+                    "愤怒是未表达的需求。",
+                    "深呼吸十次，愤怒就会减半。",
+                    "理解愤怒背后的原因，比发泄愤怒更重要。"
+                ],
+                color: "bg-gradient-to-r from-red-400 via-orange-500 to-yellow-500"
+            }
+        };
+        
+        // 当前状态
+        let currentEmotion = "happy";
+        let soundPlaying = false;
+        let currentAudio = null;
+        
+        // DOM元素
+        const faceElement = document.getElementById('face');
+        const quoteElement = document.getElementById('quote');
+        const particlesContainer = document.getElementById('particles-container');
+        const bodyElement = document.body;
+        
+        // 音频元素
+        const happySound = document.getElementById('happy-sound');
+        const calmSound = document.getElementById('calm-sound');
+        const sadSound = document.getElementById('sad-sound');
+        const angrySound = document.getElementById('angry-sound');
+        
+        // 按钮元素
+        const happyBtn = document.getElementById('happy-btn');
+        const calmBtn = document.getElementById('calm-btn');
+        const sadBtn = document.getElementById('sad-btn');
+        const angryBtn = document.getElementById('angry-btn');
+        const soundBtn = document.getElementById('sound-btn');
+        const colorBtn = document.getElementById('color-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        // 初始化
+        function init() {
+            createParticles(30);
+            setEmotion(currentEmotion);
+            
+            // 事件监听
+            happyBtn.addEventListener('click', () => setEmotion('happy'));
+            calmBtn.addEventListener('click', () => setEmotion('calm'));
+            sadBtn.addEventListener('click', () => setEmotion('sad'));
+            angryBtn.addEventListener('click', () => setEmotion('angry'));
+            
+            soundBtn.addEventListener('click', toggleSound);
+            colorBtn.addEventListener('click', changeColorScheme);
+            resetBtn.addEventListener('click', resetAll);
+        }
+        
+        // 设置情绪
+        function setEmotion(emotion) {
+            currentEmotion = emotion;
+            const emotionData = emotions[emotion];
+            
+            // 更新表情
+            faceElement.textContent = emotionData.emoji;
+            
+            // 更新语录
+            const randomQuote = emotionData.quotes[Math.floor(Math.random() * emotionData.quotes.length)];
+            quoteElement.textContent = `"${randomQuote}"`;
+            
+            // 停止当前音频
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            
+            // 根据情绪播放声音
+            switch(emotion) {
+                case 'happy':
+                    currentAudio = happySound;
+                    break;
+                case 'calm':
+                    currentAudio = calmSound;
+                    break;
+                case 'sad':
+                    currentAudio = sadSound;
+                    break;
+                case 'angry':
+                    currentAudio = angrySound;
+                    break;
+            }
+            
+            if (soundPlaying) {
+                currentAudio.play();
+            }
+            
+            // 更新按钮状态
+            updateButtonStates();
+        }
+        
+        // 切换声音
+        function toggleSound() {
+            soundPlaying = !soundPlaying;
+            
+            if (soundPlaying) {
+                currentAudio.play();
+                soundBtn.innerHTML = '<i class="fas fa-volume-up mr-2"></i> 静音';
+            } else {
+                currentAudio.pause();
+                soundBtn.innerHTML = '<i class="fas fa-volume-mute mr-2"></i> 声音';
+            }
+        }
+        
+        // 改变颜色方案
+        function changeColorScheme() {
+            const colorSchemes = [
+                'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500',
+                'bg-gradient-to-r from-green-400 via-blue-500 to-purple-500',
+                'bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500',
+                'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500',
+                'bg-gradient-to-r from-blue-400 via-cyan-500 to-green-500'
+            ];
+            
+            const randomScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
+            bodyElement.className = `${randomScheme} min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden relative`;
+        }
+        
+        // 重置所有
+        function resetAll() {
+            setEmotion('happy');
+            soundPlaying = false;
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            soundBtn.innerHTML = '<i class="fas fa-music mr-2"></i> 声音';
+            bodyElement.className = 'gradient-bg min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden relative';
+        }
+        
+        // 更新按钮状态
+        function updateButtonStates() {
+            happyBtn.className = currentEmotion === 'happy' 
+                ? 'bg-yellow-500 text-white font-bold py-3 px-4 rounded-full flex items-center justify-center'
+                : 'bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center';
+                
+            calmBtn.className = currentEmotion === 'calm' 
+                ? 'bg-blue-500 text-white font-bold py-3 px-4 rounded-full flex items-center justify-center'
+                : 'bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center';
+                
+            sadBtn.className = currentEmotion === 'sad' 
+                ? 'bg-purple-500 text-white font-bold py-3 px-4 rounded-full flex items-center justify-center'
+                : 'bg-purple-400 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center';
+                
+            angryBtn.className = currentEmotion === 'angry' 
+                ? 'bg-red-500 text-white font-bold py-3 px-4 rounded-full flex items-center justify-center'
+                : 'bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-full transition-all flex items-center justify-center';
+        }
+        
+        // 创建粒子效果
+        function createParticles(count) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // 随机大小
+                const size = Math.random() * 15 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // 随机位置
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // 随机颜色
+                const colors = ['rgba(255,255,255,0.7)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)'];
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 随机动画延迟
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // 启动应用
+        window.onload = init;
+    </script>
+</body>
+</html>
